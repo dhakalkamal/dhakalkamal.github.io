@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CORI: Kamal Dhakal</title>
+  <meta name="description" content="CORI: sanctions and financial-crime screening for community banks. PU learning, twelve-gate leakage validation, network graph for hidden exposure traversal. 1.83 million entities scored.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="wrap nav-inner">
+      <a href="/#projects" class="nav-back-link">&larr; Kamal Dhakal</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <header class="case-header">
+      <div class="wrap">
+        <span class="case-header-tag">Case Study &middot; 01</span>
+        <h1>CORI</h1>
+        <p class="case-tagline">Counterparty Risk Intelligence for community banks. A sanctions screening platform built end to end from public data.</p>
+        <div class="case-header-links">
+          <a href="https://github.com/dhakalkamal/counter-party-risk-intelligence" target="_blank" rel="noopener noreferrer">Source code &rarr;</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="case-body">
+      <div class="wrap">
+
+        <!-- Intro -->
+        <section class="case-section">
+          <p>Community banks have the same regulatory obligations as JPMorgan when it comes to sanctions screening, and the same penalties for missing a hit. What they do not have is the same budget. Refinitiv World-Check and LexisNexis Bridger are priced for tier-one institutions at fifty to two hundred thousand dollars a year. A typical community bank&rsquo;s entire compliance budget is smaller than that.</p>
+          <p>The data underneath these commercial products is mostly public. OpenSanctions republishes 179 upstream lists. GLEIF publishes 1.77 million LEI-issued legal entities. ICIJ Offshore Leaks is a download. GDELT is a 21 TB BigQuery public dataset. CORI is what it looks like to integrate those sources, score them, and present the result to a compliance analyst with the explanation an OCC examiner will demand.</p>
+        </section>
+
+        <!-- Architecture -->
+        <section class="case-section">
+          <p class="case-section-label">Architecture</p>
+          <h2>The architecture</h2>
+          <p>A Bronze, Silver, Gold medallion pattern with PostgreSQL triggers enforcing append-only Bronze at the database level (audit integrity in the substrate, not in convention). Silver as Parquet with CSV companions. Gold not as a feature table but as a scoring output table, where a <code>feature_version</code> column ties every score to a reproducible Silver state and a <code>top_factors</code> JSONB column persists SHAP attributions alongside each prediction. Score and explanation travel together.</p>
+          <p>Storage splits across substrates by cost shape: PostgreSQL for Bronze audit and Gold scoring (under 5 GB total), BigQuery as external Bronze for GDELT (21 TB scanned, under twelve dollars in query cost), Parquet for Silver analytical tables.</p>
+        </section>
+
+        <!-- Methodology -->
+        <section class="case-section">
+          <p class="case-section-label">Methodology</p>
+          <h2>Why PU learning</h2>
+          <p>Classical binary classification does not fit this domain. Sanctioned entities are confirmed positives. Absence of a listing does not confirm an entity is clean; it may not have been designated yet. Training a model that treats every unlabeled entity as negative teaches it that future sanctions targets are safe. Positive-Unlabeled learning, following Elkan and Noto, estimates the probability that an unlabeled entity is positive given that some true positives are hidden in the unlabeled pool. The positive class is 56,652 Tier 1 sanctions entities. The unlabeled class is 1.77 million GLEIF commercial entities. XGBoost, 500 trees, early stopping at 50.</p>
+        </section>
+
+        <!-- Iteration -->
+        <section class="case-section">
+          <p class="case-section-label">Iteration</p>
+          <h2>Four iterations and a methodology</h2>
+          <p>The first model achieved an AUC of 1.0 on the source leakage gate. That sounded great until you understood what it meant. A single feature, <code>tier_1_dataset_count</code>, perfectly separated the populations. SHAP showed it commanding 100 percent of total attribution. The model had learned a lookup table.</p>
+          <p>Version 2 removed the obviously leaked features. The <code>is_offshore</code> feature took over at 90 percent SHAP share. Investigation revealed why: <code>is_offshore</code> was 100 percent null for OpenSanctions entities and 0 percent null for GLEIF. The feature was encoding source membership through its missingness, not offshore risk.</p>
+          <p>Removed <code>is_offshore</code>. <code>entity_age_days</code> took over at 90 percent. Same pattern. The two populations had systematically different age distributions and the model exploited that gap.</p>
+          <p>This was the moment that mattered. Removing leaked features one at a time was a losing strategy because the leakage was structural. When your positive and unlabeled populations come from different data sources, any feature can become a source proxy. The feature space itself had to be unified.</p>
+          <p>Version 3 ran ICIJ matching across both populations through the same code path. Version 3.1 added source-wise normalization, median imputation for nulls, and nationality fallback for missing jurisdiction codes. Source leakage AUC dropped from 1.0 to 0.81, above the 0.75 failure threshold but partially mitigated. Post-train dominance dropped to 42 percent. Twelve nonzero SHAP features across country risk, jurisdiction, offshore status, entity age, and ICIJ connections.</p>
+          <p>The leakage is documented, measured, partially mitigated, and transparently reported. That last part is the contribution.</p>
+        </section>
+
+        <!-- TODO: Replace src with actual screenshot: alert detail view with SHAP attribution waterfall -->
+        <div class="case-media">
+          <figure>
+            <img
+              src="../../assets/cori/alert-detail-shap.png"
+              alt="Alert detail panel showing a flagged entity's risk score alongside a SHAP attribution waterfall. Each bar shows a feature's directional contribution: country risk, offshore status, ICIJ connections, entity age, and other factors that drove the score."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>SHAP attribution view. Each bar is a feature&rsquo;s directional contribution to the risk score.</figcaption>
+          </figure>
+        </div>
+
+        <!-- Validation -->
+        <section class="case-section">
+          <p class="case-section-label">Validation</p>
+          <h2>Twelve gates</h2>
+          <p>The iteration story is one specific leakage path. The broader lesson is that ad-hoc inspection does not scale. So we built a validation framework. Twelve gates, each testing one leakage or quality condition. A model must pass all twelve to be promoted to Gold. Pre-training gates cover lineage, single-feature determinism, univariate predictive power, source leakage AUC, and missingness gaps. Training-process gates cover coverage parity, family collinearity, split hygiene, and adversarial validation. Post-training gates cover dominance, calibration, and artifact integrity. The framework runs automatically before any model is promoted. Gate results are logged to the pipeline audit schema. An examiner asking how the model was validated gets a paper trail.</p>
+        </section>
+
+        <!-- Network analysis -->
+        <section class="case-section">
+          <p class="case-section-label">Network Analysis</p>
+          <h2>The graph</h2>
+          <p>A SHAP waterfall tells an analyst which features drove a risk score. For ICIJ-derived features it is not enough. A compliance officer needs to see what the connection is, to whom, and how many hops away a sanctioned party sits.</p>
+          <p>The ICIJ Offshore Leaks Database loads into PostgreSQL as a traversable graph: 2 million nodes, 3.3 million edges. For each scored entity with an ICIJ bridge match, breadth-first search finds the shortest path to any sanctioned node up to four hops. 6,551 entities have at least one exposure path. The interesting ones are the 784 entities at one to four hops, whose sanctions exposure is invisible without traversal.</p>
+          <p>The case that matters most: Sea Knot Shipping Inc. receives a score of 0.29 (LOW). The model considers it safe. The graph reveals a two-hop path to sanctioned entities via MOSSFON SUBSCRIBERS LTD, a Mossack Fonseca entity from the Panama Papers. An entity no score-only system would flag has hidden offshore connections worth investigating. The three-layer explanation (score, SHAP, graph) gives the analyst what they need to decide.</p>
+        </section>
+
+        <!-- TODO: Replace src values with actual screenshots -->
+        <!-- network-graph.png: network graph visualization showing entity connections and exposure paths -->
+        <!-- entity-detail.png: entity detail panel with score, SHAP top factors, and exposure paths -->
+        <div class="case-media wide">
+          <div class="media-pair">
+            <figure>
+              <img
+                src="../../assets/cori/network-graph.png"
+                alt="Network graph view showing an entity's shortest-path connections to sanctioned nodes. Nodes represent corporate entities; edges represent ownership and officer relationships. Sanctioned nodes are highlighted."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Exposure graph. Shortest-path traversal to sanctioned nodes up to four hops.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="../../assets/cori/entity-detail.png"
+                alt="Entity detail panel showing a three-layer explanation: risk score at the top, SHAP top-5 feature attributions in the middle, and network exposure paths to sanctioned nodes at the bottom."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Entity detail. Score, SHAP attributions, and exposure paths in one view.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Results -->
+        <section class="case-section">
+          <p class="case-section-label">Results</p>
+          <h2>What is running</h2>
+          <p>The system scores 1,833,779 entities across three bands: 54,216 high, 2,649 medium, 1,776,914 low. Every score carries top-5 SHAP attribution and, where applicable, top exposure paths. The full pipeline (<code>migrate</code>, <code>ingest</code>, <code>dbt_build</code>, <code>score</code>, <code>graph_build</code>) runs inside a Docker container, triggered from the frontend, with each step recorded in pipeline audit tables.</p>
+          <p>The frontend is React with role-based access matching a real community bank&rsquo;s compliance org: BSA Analyst, BSA Officer, Auditor. Every design choice (append-only Bronze, versioned feature contracts, pipeline audit tables, SHAP top-5 persistence, the twelve-gate framework) exists to answer the one question an OCC examiner can ask at any time: &ldquo;Why this score?&rdquo;</p>
+        </section>
+
+        <!-- TODO: Replace src values with actual screenshots -->
+        <!-- alert-list.png: alert list showing scored entities across urgency bands, BSA Analyst view -->
+        <!-- role-views.png: role-based interface comparison for BSA Analyst, BSA Officer, Auditor -->
+        <div class="case-media wide">
+          <div class="media-pair">
+            <figure>
+              <img
+                src="../../assets/cori/alert-list.png"
+                alt="Alert list showing scored entities across urgency bands. BSA Analyst view with entity names, risk scores, top SHAP factor, and case status. Rows sorted by risk score descending."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Alert list. BSA Analyst view.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="../../assets/cori/role-views.png"
+                alt="Role-based interface views shown side by side: BSA Analyst case queue on the left, BSA Officer aggregate exposure summary in the center, and Auditor event log on the right."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Role-based views: BSA Analyst, BSA Officer, Auditor.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="case-article-footer">
+          <!-- TODO: Replace href="#" with actual live demo URL when available -->
+          <a href="#">Live demo</a>
+          <a href="https://github.com/dhakalkamal/counter-party-risk-intelligence" target="_blank" rel="noopener noreferrer">Source code</a>
+          <!-- TODO: Replace href="#" with published paper URL when available -->
+          <a href="#">Published paper</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <ul class="footer-links">
+        <li><a href="mailto:kamaldhakal01@gmail.com">Email</a></li>
+        <li><a href="https://github.com/dhakalkamal" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 Kamal Dhakal</span>
+    </div>
+  </footer>
+
+</body>
+</html>

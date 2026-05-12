@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundSense: Kamal Dhakal</title>
+  <meta name="description" content="SoundSense: phone-native sound awareness for the deaf and hard of hearing. PANNs CNN14, deterministic temporal reasoning, LLM natural language layer. iOS and Android.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="wrap nav-inner">
+      <a href="/#projects" class="nav-back-link">&larr; Kamal Dhakal</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <header class="case-header">
+      <div class="wrap">
+        <span class="case-header-tag">Case Study &middot; 03</span>
+        <h1>SoundSense</h1>
+        <p class="case-tagline">Real-time sound awareness for the deaf and hard of hearing. The phone in your pocket becomes an ear you can trust.</p>
+        <div class="case-header-links">
+          <a href="https://github.com/dhakalkamal/SoundSense" target="_blank" rel="noopener noreferrer">Source code (backend) &rarr;</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="case-body">
+      <div class="wrap">
+
+        <!-- YouTube embed placeholder -->
+        <!-- TODO: Replace VIDEO_ID in the iframe src with the actual YouTube video ID once the unlisted demo video is uploaded -->
+        <!-- Embed URL format: https://www.youtube.com/embed/VIDEO_ID -->
+        <div class="video-embed">
+          <div class="video-placeholder">YouTube embed placeholder: swap in video ID</div>
+          <!--
+          <iframe
+            src="https://www.youtube.com/embed/VIDEO_ID"
+            title="SoundSense demo: real-time sound awareness for deaf and hard-of-hearing users"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+          -->
+        </div>
+
+        <!-- Intro -->
+        <section class="case-section">
+          <p>A deaf couple gave their baby to grandparents because they could not hear them cry. That story is the reason this project exists. Hearing technology has transformed communication for the 1.5 billion people globally with hearing loss. One dimension remains underserved: awareness of the physical environment. A fire alarm. A door opening. A baby crying. The things you need to know about even when nobody is trying to tell you.</p>
+          <p>SoundSense is a phone-native sound awareness system. It listens continuously, recognizes more than twenty categories of safety-relevant sounds, reasons about them in temporal context, and tells you what is happening with hedged, useful language. About three-second latency. iOS and Android. No external hardware.</p>
+        </section>
+
+        <!-- Context -->
+        <section class="case-section">
+          <p class="case-section-label">Context</p>
+          <h2>What existing tools miss</h2>
+          <p>Best-in-class published models score as low as 40 percent on fire alarm detection in real conditions. The University of Washington&rsquo;s NSF-funded SoundWatch study was titled &ldquo;Not There Yet.&rdquo; The problem is not that audio models are bad. It is that existing systems classify isolated sounds without temporal context, and the real world is not isolated sounds.</p>
+          <p>A single door click is not interesting. Footsteps followed by a door click within twelve seconds is &ldquo;someone entered.&rdquo; A single high tone is ambiguous. A high tone repeated three times in thirty seconds is &ldquo;alarm escalating.&rdquo; The information lives in the sequence, not the frame.</p>
+        </section>
+
+        <!-- System -->
+        <section class="case-section">
+          <p class="case-section-label">System</p>
+          <h2>How it works</h2>
+          <p>PANNs CNN14 (pretrained on AudioSet&rsquo;s 527 classes, 0.43 mAP) runs on a sliding window of phone-mic audio. We narrowed the 527 output classes to ten HoH-relevant safety signals with a hand-tuned mapping. A stateful event manager maintains a rolling deque of detections with per-label duration and count tracking.</p>
+          <p>Eleven hand-written deterministic rules sit on top of the event stream. <code>ARRIVAL_DETECTED</code> fires only when footsteps precede a door event within twelve seconds. <code>ALARM_ESCALATING</code> requires three detections within thirty seconds, distinguishing a smoke alarm from an oven timer. Twelve flag states with hard-coded priority ordering. Glass break and fire alarm are always critical. Baby crying outranks ambient calm. The priorities encode an accessibility worldview: what does someone who cannot hear need to know about first.</p>
+          <p>We considered handing the temporal reasoning to an LLM. We decided against it. The rules need to be reproducible and testable. The LLM gets one job: translate the current flag into a short, hedged natural-language sentence, capped at twenty words, fired only when the situation flag changes. &ldquo;Someone may have entered.&rdquo; Hedged language because false confidence is worse than acknowledged uncertainty when a user has to act on the alert.</p>
+        </section>
+
+        <!-- Engineering -->
+        <section class="case-section">
+          <p class="case-section-label">Engineering</p>
+          <h2>The phone audio problem</h2>
+          <p>CNN14 was trained on AudioSet, which is mostly studio-quality clips. Real phone mics are compressed, noisy, and on Android, processed by the operating system before your code sees the samples. Android&rsquo;s default audio path applies automatic gain control and noise suppression, both designed for voice calls, both of which eat tonal sounds. A fire alarm is exactly the kind of pure-tone signal that AGC suppresses.</p>
+          <p>The fix on Android is to request <code>UNPROCESSED</code> audio source, bypassing the OS-level conditioning. This took meaningful engineering time and it is the kind of detail that does not appear in any paper but completely determines whether the system works on a real device.</p>
+        </section>
+
+        <!-- Mobile -->
+        <section class="case-section">
+          <p class="case-section-label">Mobile</p>
+          <h2>The mobile client</h2>
+          <p>React Native, iOS and Android, dark-first aesthetic designed for glance-readability. Three screens. Home has six preset demo scenarios so a hearing user can experience the system without setting up a real audio environment. Live Monitor is the working surface: a dominant situation card that animates when the flag changes, a sound timeline below it, and a compare panel showing raw label detections on one side and the contextual explanation on the other. Event Detail opens by tapping any event.</p>
+          <p>The mobile client source is in a separate repo being consolidated into the backend monorepo.</p>
+        </section>
+
+        <!-- Results -->
+        <section class="case-section">
+          <p class="case-section-label">Results</p>
+          <h2>What is running</h2>
+          <p>Mobile app fully functional, demonstrated live on real Android hardware. iOS build tested. Both ready for App Store and Play Store submission. Real-time detection across twenty-plus sound categories. WebSocket streaming pipeline with about three-second end-to-end alert latency. Target sound precision 0.6 to 0.8 on priority classes.</p>
+        </section>
+
+        <div class="case-article-footer">
+          <!-- TODO: Replace href="#" with actual live demo URL when available -->
+          <a href="#">Live demo</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <ul class="footer-links">
+        <li><a href="mailto:kamaldhakal01@gmail.com">Email</a></li>
+        <li><a href="https://github.com/dhakalkamal" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 Kamal Dhakal</span>
+    </div>
+  </footer>
+
+</body>
+</html>

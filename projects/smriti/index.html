@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>smriti: Kamal Dhakal</title>
+  <meta name="description" content="smriti: long-memory companions for local LLMs. Privacy-first, fully local, scope-partitioned memory for Ollama models. Open source.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="wrap nav-inner">
+      <a href="/#projects" class="nav-back-link">&larr; Kamal Dhakal</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <header class="case-header">
+      <div class="wrap">
+        <span class="case-header-tag">Case Study &middot; 02</span>
+        <h1>smriti</h1>
+        <p class="case-tagline">Long-memory companions for local LLMs. Conversations that span months, not minutes. Your data, your machine.</p>
+        <div class="case-header-links">
+          <a href="https://github.com/dhakalkamal/smriti" target="_blank" rel="noopener noreferrer">Repo on GitHub &rarr;</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="case-body">
+      <div class="wrap">
+
+        <!-- Intro -->
+        <section class="case-section">
+          <p><em>smriti</em> (&#x0938;&#x094D;&#x092E;&#x0943;&#x0924;&#x093F;) is Sanskrit for &ldquo;memory.&rdquo;</p>
+          <p>There is a category of conversation people want to have with an AI but not with a cloud provider. Therapy-adjacent. Health questions. Family matters. Things you would not type into ChatGPT because you have read the privacy policy.</p>
+          <p>The standard answer is local LLMs. Run Ollama on your Mac, point a chat client at it, no data leaves the machine. Beautiful in theory. In practice, local models on Apple Silicon have a small effective context window. Once a conversation passes eight thousand to thirty-two thousand tokens, the model starts forgetting. An hour of meaningful conversation, and the thread is gone.</p>
+          <p>smriti sits between you and a local LLM, archives older messages, embeds them, and pulls the relevant ones back into context when you need them. The conversation feels long. The data stays local. No accounts, no telemetry, no signup.</p>
+        </section>
+
+        <!-- TODO: Replace with animated GIF or screen recording of the smriti chat UI -->
+        <!-- Asset should go in /assets/smriti/, showing a long-running conversation with memory retrieval in action -->
+        <div class="case-media">
+          <figure>
+            <img
+              src="../../assets/smriti/demo.gif"
+              alt="Screen recording of the smriti chat UI showing a long-running conversation. The interface displays the active scope, the current message thread, and a memory panel showing which archived messages were retrieved and injected into context."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Chat UI. The memory panel shows which archived messages were retrieved for this turn.</figcaption>
+          </figure>
+        </div>
+
+        <!-- Design -->
+        <section class="case-section">
+          <p class="case-section-label">Design</p>
+          <h2>Scopes</h2>
+          <p>Most memory systems treat memory as one global pool. smriti uses scopes: user-defined memory partitions, each with its own system prompt. You might have a &ldquo;Family Companion&rdquo; scope, a &ldquo;Research Notes&rdquo; scope, a &ldquo;Coding Helper&rdquo; scope. Conversations within a scope share memory. Across scopes, never.</p>
+          <p>A general-purpose memory layer either remembers everything in one pile and contaminates every conversation with everything you have ever said, or remembers nothing and is no better than a long context window. Scopes are the middle path. You decide what context belongs together.</p>
+          <p>A scope is also a persona container. The system prompt for &ldquo;Coding Helper&rdquo; is different from &ldquo;Family Companion.&rdquo; The bot that helps you debug Rust is not the same bot that listens to you talk about your mother. It should not be.</p>
+        </section>
+
+        <!-- Privacy -->
+        <section class="case-section">
+          <p class="case-section-label">Privacy</p>
+          <h2>The privacy threat model</h2>
+          <p>Privacy claims need to be precise. With the bundled chat UI plus Ollama, nothing leaves the machine. Messages, embeddings, summaries, all local. Postgres binds to localhost. Ollama binds to localhost. You can verify with <code>lsof</code> or Little Snitch.</p>
+          <p>With external MCP clients (Claude Desktop, Cline with cloud models), the smriti MCP server is still local, but those clients send your messages, and any memories retrieved on your behalf, to their respective cloud providers. This is fine if you trust them. It is not the local-only mode. The README says this in plain language. The distinction is the whole point.</p>
+        </section>
+
+        <!-- Architecture -->
+        <section class="case-section">
+          <p class="case-section-label">Architecture</p>
+          <h2>One service, two transports</h2>
+          <p>The interesting design decision is that the same memory service is exposed through two surfaces. A FastAPI HTTP server feeds a React chat UI, the path with the full privacy guarantee. A FastMCP server speaks MCP over stdio for external clients like Claude Desktop. Same memory service underneath. Different transports.</p>
+          <p>Building two separate memory layers would have been the obvious move. The memory service is the core; the two surfaces are thin wrappers over it. One implementation, two transports. When the retrieval scoring changes, both surfaces get it. When the schema migrates, neither breaks.</p>
+        </section>
+
+        <!-- Retrieval -->
+        <section class="case-section">
+          <p class="case-section-label">Retrieval</p>
+          <h2>Retrieval</h2>
+          <p>Messages embed with <code>nomic-embed-text</code> (768 dimensions). Episodes (either individual messages or summaries of older message ranges) live in one Postgres table with <code>pgvector</code> HNSW indexes. Retrieval searches both kinds transparently.</p>
+          <p>Scoring is not cosine similarity alone. It is multi-component: similarity, recency, importance, reinforcement, and frequency. A message from yesterday about your current project ranks higher than a semantically similar message from six months ago about something you have not mentioned since. A message you returned to multiple times is probably more important than one you mentioned once. Cosine similarity alone misses all of this.</p>
+        </section>
+
+        <!-- Status -->
+        <section class="case-section">
+          <p class="case-section-label">Status</p>
+          <h2>Status</h2>
+          <p>v1 is shipped and running. The repo is open source and the roadmap is public. Build it yourself if you want to run it. The whole point of a privacy-first tool is that you can read the code that handles your data.</p>
+          <p>Active development is ongoing. If you would like access to the work in progress or want to collaborate, <a href="mailto:kamaldhakal01@gmail.com" class="link-accent">email me</a>.</p>
+        </section>
+
+        <div class="case-article-footer">
+          <a href="https://github.com/dhakalkamal/smriti" target="_blank" rel="noopener noreferrer">Repo on GitHub</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <ul class="footer-links">
+        <li><a href="mailto:kamaldhakal01@gmail.com">Email</a></li>
+        <li><a href="https://github.com/dhakalkamal" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 Kamal Dhakal</span>
+    </div>
+  </footer>
+
+</body>
+</html>

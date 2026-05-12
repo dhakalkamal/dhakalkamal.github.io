@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bounded Governance AI: Kamal Dhakal</title>
+  <meta name="description" content="Bounded Governance AI: active prototype for governance analysis with bounded multi-agent workflows, evidence-linked findings, RBAC, and audit trails.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+
+  <nav class="site-nav">
+    <div class="wrap nav-inner">
+      <a href="/#projects" class="nav-back-link">&larr; Kamal Dhakal</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <header class="case-header">
+      <div class="wrap">
+        <span class="case-header-tag">Case Study &middot; 04</span>
+        <h1>Bounded Governance AI</h1>
+        <p class="case-tagline">Bounded agentic governance analysis for board minutes and governance documents. Evidence-linked outputs, role boundaries, and audit trails.</p>
+        <div class="case-header-links">
+          <a href="https://github.com/dhakalkamal/bounded-governance-ai" target="_blank" rel="noopener noreferrer">Source code &rarr;</a>
+          <a href="https://github.com/dhakalkamal/bounded-governance-ai/blob/main/Bounded_Agentic_Governance_Architecture.md" target="_blank" rel="noopener noreferrer">Architecture note &rarr;</a>
+        </div>
+      </div>
+    </header>
+
+    <div class="case-body">
+      <div class="wrap">
+
+        <!-- Intro -->
+        <section class="case-section">
+          <p>Most AI governance demos focus on model capability first and controls second. This project starts from the opposite direction. The requirement is simple: if an assistant helps review board minutes, policy documents, and conflict disclosures, every claim must point to evidence, every action must be attributable, and every agent must stay within an explicit boundary.</p>
+          <p>Bounded Governance AI is an active prototype for that problem. It combines a Next.js frontend, a FastAPI backend, async SQLite persistence, and a coordinated set of Gemini-powered agents. The key design decision is not just multi-agent orchestration. It is bounded orchestration: each agent gets a defined document scope, constrained output responsibilities, and a review path when findings are weak or ambiguous.</p>
+        </section>
+
+        <!-- Architecture -->
+        <section class="case-section">
+          <p class="case-section-label">Architecture</p>
+          <h2>One workflow, several constrained agents</h2>
+          <p>The analysis workflow is organized around specialized agents. A Minutes Analyzer extracts decisions, risks, and action items from board minutes. A Framework Checker compares governance behavior against policy and reference framework documents. A COI Detector looks for potential conflict-of-interest signals and is instructed to stay non-accusatory in tone. An orchestrator coordinates these passes and persists outputs as structured findings.</p>
+          <p>After the first pass, a reviewer step re-checks finding quality: does the quote support the claim, is the confidence proportionate to evidence, and is the language clear enough for human follow-up. A separate cross-document pass looks for recurring risks and unresolved themes across multiple meetings. This gives a compact example of agent specialization plus post-processing guardrails in one end-to-end system.</p>
+        </section>
+
+        <!-- TODO: Replace src with dashboard screenshot from running prototype -->
+        <!-- dashboard-overview.png: governance dashboard with severity breakdown, trend chart, and findings summary cards -->
+        <div class="case-media">
+          <figure>
+            <img
+              src="../../assets/bounded-governance-ai/dashboard-overview.png"
+              alt="Governance dashboard showing findings summary cards, severity breakdown chart, and trend view across meeting documents."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Prototype dashboard: findings distribution, trends, and review load at a glance.</figcaption>
+          </figure>
+        </div>
+
+        <!-- Permissions -->
+        <section class="case-section">
+          <p class="case-section-label">Controls</p>
+          <h2>Boundaries in two layers: role access and agent scope</h2>
+          <p>The control model is split into two layers. First is user-facing RBAC. The prototype includes roles like Board Chair, Governance Analyst, Compliance Officer, Ops Manager, and Intern, each with different permissions for upload, analysis, chat, findings review, and audit visibility. Second is agent-level scope control through an access matrix: each agent can only read the document categories assigned to it.</p>
+          <p>This separation matters. User permissions determine what actions someone can initiate. Agent permissions determine what information an automated step can touch after that action starts. Even in a prototype, that distinction makes the system easier to reason about and test. It also reduces the chance of accidental overreach when prompts or workflows evolve.</p>
+        </section>
+
+        <!-- Evidence + audit -->
+        <section class="case-section">
+          <p class="case-section-label">Traceability</p>
+          <h2>Evidence-linked findings and full audit trail</h2>
+          <p>Findings are stored with title, type, severity, confidence, source document, and evidence quote. The interface keeps these fields visible so reviewers can inspect why a result exists before acting on it. For roles that allow it, findings can be marked verified or disputed, which keeps the human decision trail near the model output rather than in external notes.</p>
+          <p>Alongside findings, the backend records agent actions in an audit log with timestamps and summaries. In practice, this means the prototype can answer two operational questions: what did the system conclude, and what sequence produced that conclusion. For governance-oriented use cases, that auditability requirement is as important as model quality.</p>
+        </section>
+
+        <!-- TODO: Replace src values with actual screenshots -->
+        <!-- findings-evidence-review.png: expanded finding with evidence quote and verify/dispute controls -->
+        <!-- audit-trail.png: timestamped audit log with agent type, action, and input hash -->
+        <div class="case-media wide">
+          <div class="media-pair">
+            <figure>
+              <img
+                src="../../assets/bounded-governance-ai/findings-evidence-review.png"
+                alt="Analysis findings panel with severity tags, confidence values, evidence quote excerpt, and verification or dispute controls."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Finding review panel: evidence quote, confidence, and human verification controls.</figcaption>
+            </figure>
+            <figure>
+              <img
+                src="../../assets/bounded-governance-ai/audit-trail.png"
+                alt="Audit trail view listing timestamped agent actions, action summaries, and trace identifiers for analysis jobs."
+                width="900"
+                height="600"
+                loading="lazy"
+              >
+              <figcaption>Audit trail: who did what, when, and through which agent step.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <section class="case-section">
+          <p class="case-section-label">Status</p>
+          <h2>Active prototype and next steps</h2>
+          <p>The current implementation runs as a local Dockerized stack with a multi-page web interface for documents, findings, governed chat, dashboard views, and audit logs. It is intentionally framed as active development: the goal is to validate design choices around bounded access, evidence discipline, and review workflows before claiming production readiness.</p>
+          <p>The next stage is to harden evaluation and expand operational checks around false positives, reviewer burden, and role-specific usability. For now, the contribution is a working reference for bounded agentic design in governance analysis: practical enough to run end to end, constrained enough to inspect, and explicit enough to critique.</p>
+        </section>
+
+        <!-- TODO: Replace src with governed chat screenshot from running prototype -->
+        <!-- governed-chat-citations.png: chat response grounded in selected documents with visible source citations -->
+        <div class="case-media">
+          <figure>
+            <img
+              src="../../assets/bounded-governance-ai/governed-chat-citations.png"
+              alt="Governed chat interface showing a user question, assistant response, and inline citations referencing selected governance documents."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Governed chat: answers are grounded in selected documents with citation tags.</figcaption>
+          </figure>
+        </div>
+
+        <div class="case-article-footer">
+          <a href="https://github.com/dhakalkamal/bounded-governance-ai" target="_blank" rel="noopener noreferrer">Source code</a>
+          <a href="https://github.com/dhakalkamal/bounded-governance-ai/blob/main/Bounded_Agentic_Governance_Architecture.md" target="_blank" rel="noopener noreferrer">Architecture note</a>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <ul class="footer-links">
+        <li><a href="mailto:kamaldhakal01@gmail.com">Email</a></li>
+        <li><a href="https://github.com/dhakalkamal" target="_blank" rel="noopener noreferrer">GitHub</a></li>
+      </ul>
+      <span class="footer-copy">&copy; 2026 Kamal Dhakal</span>
+    </div>
+  </footer>
+
+</body>
+</html>
