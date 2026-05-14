@@ -37,7 +37,7 @@ About:
   Based in the US. Open to ML engineering roles in New York and the SF
   Bay Area.
 
-  Reach me at kamaldhakal01@gmail.com.
+  Interested in working together? Email me at kamaldhakal01@gmail.com.
 
 Education:
 
