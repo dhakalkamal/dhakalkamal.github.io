@@ -13,7 +13,7 @@ A landing page plus a case study page for each of my projects. The
 goal is for someone scanning for 30 seconds to understand what I make
 and want to look closer.
 
-## Hero and about (final, do not modify)
+## Hero, about, and education (final, do not modify)
 
 Hero:
 
@@ -38,6 +38,12 @@ About:
   Bay Area.
 
   Reach me at kamaldhakal01@gmail.com.
+
+Education:
+
+  MSIS, Robinson College of Business, Georgia State University (2026)
+  MS Electrical Engineering, Aalto University (2023)
+  BS Electronics, Metropolia University of Applied Sciences (2018)
 
 ## Projects
 
@@ -130,7 +136,7 @@ modify files in those repos. Only write to this portfolio repo.
 - Before adding any dependency or build tool.
 - Before changing the overall page structure (new top-level sections,
   navigation changes).
-- Before changing the hero or about section copy. Those are final.
+- Before changing the hero, about, or education section copy. Those are final.
 - Before writing prose for case studies that goes beyond what I have
   explicitly provided. I supply the case study text; do not generate
   new prose without asking.
