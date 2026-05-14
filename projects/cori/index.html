@@ -40,6 +40,19 @@
           <p>The data underneath these commercial products is mostly public. OpenSanctions republishes 179 upstream lists. GLEIF publishes 1.77 million LEI-issued legal entities. ICIJ Offshore Leaks is a download. GDELT is a 21 TB BigQuery public dataset. CORI is what it looks like to integrate those sources, score them, and present the result to a compliance analyst with the explanation an OCC examiner will demand.</p>
         </section>
 
+        <div class="case-media wide">
+          <figure>
+            <img
+              src="../../assets/cori/login-role-selection.png"
+              alt="CORI login and role selection screen showing access paths for BSA Analyst, BSA Officer, and Auditor."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>RBAC entry point: role-specific access for Analyst, Officer, and Auditor.</figcaption>
+          </figure>
+        </div>
+
         <!-- Architecture -->
         <section class="case-section">
           <p class="case-section-label">Architecture</p>
@@ -48,12 +61,38 @@
           <p>Storage splits across substrates by cost shape: PostgreSQL for Bronze audit and Gold scoring (under 5 GB total), BigQuery as external Bronze for GDELT (21 TB scanned, under twelve dollars in query cost), Parquet for Silver analytical tables.</p>
         </section>
 
+        <div class="case-media wide">
+          <figure>
+            <img
+              src="../../assets/cori/alerts-queue-dashboard.png"
+              alt="Alerts queue dashboard showing prioritized entities, risk labels, and investigation workflow state."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Alerts queue: prioritized investigation workflow for compliance review.</figcaption>
+          </figure>
+        </div>
+
         <!-- Methodology -->
         <section class="case-section">
           <p class="case-section-label">Methodology</p>
           <h2>Why PU learning</h2>
           <p>Classical binary classification does not fit this domain. Sanctioned entities are confirmed positives. Absence of a listing does not confirm an entity is clean; it may not have been designated yet. Training a model that treats every unlabeled entity as negative teaches it that future sanctions targets are safe. Positive-Unlabeled learning, following Elkan and Noto, estimates the probability that an unlabeled entity is positive given that some true positives are hidden in the unlabeled pool. The positive class is 56,652 Tier 1 sanctions entities. The unlabeled class is 1.77 million GLEIF commercial entities. XGBoost, 500 trees, early stopping at 50.</p>
         </section>
+
+        <div class="case-media wide">
+          <figure>
+            <img
+              src="../../assets/cori/entity-overview.png"
+              alt="Entity overview page with consolidated risk score, band, and core profile details for scoring decisions."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Scoring view: entity-level risk output with key context in one panel.</figcaption>
+          </figure>
+        </div>
 
         <!-- Iteration -->
         <section class="case-section">
@@ -67,17 +106,16 @@
           <p>The leakage is documented, measured, partially mitigated, and transparently reported. That last part is the contribution.</p>
         </section>
 
-        <!-- TODO: Replace src with actual screenshot: alert detail view with SHAP attribution waterfall -->
-        <div class="case-media">
+        <div class="case-media wide">
           <figure>
             <img
-              src="../../assets/cori/alert-detail-shap.png"
-              alt="Alert detail panel showing a flagged entity's risk score alongside a SHAP attribution waterfall. Each bar shows a feature's directional contribution: country risk, offshore status, ICIJ connections, entity age, and other factors that drove the score."
+              src="../../assets/cori/shap-risk-attribution.png"
+              alt="SHAP risk attribution panel breaking down feature-level contributions to a single entity risk score."
               width="1200"
               height="750"
               loading="lazy"
             >
-            <figcaption>SHAP attribution view. Each bar is a feature&rsquo;s directional contribution to the risk score.</figcaption>
+            <figcaption>SHAP attribution: directional feature impact for one scored entity.</figcaption>
           </figure>
         </div>
 
@@ -97,32 +135,17 @@
           <p>The case that matters most: Sea Knot Shipping Inc. receives a score of 0.29 (LOW). The model considers it safe. The graph reveals a two-hop path to sanctioned entities via MOSSFON SUBSCRIBERS LTD, a Mossack Fonseca entity from the Panama Papers. An entity no score-only system would flag has hidden offshore connections worth investigating. The three-layer explanation (score, SHAP, graph) gives the analyst what they need to decide.</p>
         </section>
 
-        <!-- TODO: Replace src values with actual screenshots -->
-        <!-- network-graph.png: network graph visualization showing entity connections and exposure paths -->
-        <!-- entity-detail.png: entity detail panel with score, SHAP top factors, and exposure paths -->
         <div class="case-media wide">
-          <div class="media-pair">
-            <figure>
-              <img
-                src="../../assets/cori/network-graph.png"
-                alt="Network graph view showing an entity's shortest-path connections to sanctioned nodes. Nodes represent corporate entities; edges represent ownership and officer relationships. Sanctioned nodes are highlighted."
-                width="900"
-                height="600"
-                loading="lazy"
-              >
-              <figcaption>Exposure graph. Shortest-path traversal to sanctioned nodes up to four hops.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="../../assets/cori/entity-detail.png"
-                alt="Entity detail panel showing a three-layer explanation: risk score at the top, SHAP top-5 feature attributions in the middle, and network exposure paths to sanctioned nodes at the bottom."
-                width="900"
-                height="600"
-                loading="lazy"
-              >
-              <figcaption>Entity detail. Score, SHAP attributions, and exposure paths in one view.</figcaption>
-            </figure>
-          </div>
+          <figure>
+            <img
+              src="../../assets/cori/sanctions-exposure-network.png"
+              alt="Sanctions exposure network showing shortest-path links from a reviewed entity to sanctioned nodes."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Graph traversal: shortest sanctioned exposure paths up to four hops.</figcaption>
+          </figure>
         </div>
 
         <!-- Results -->
@@ -133,32 +156,17 @@
           <p>The frontend is React with role-based access matching a real community bank&rsquo;s compliance org: BSA Analyst, BSA Officer, Auditor. Every design choice (append-only Bronze, versioned feature contracts, pipeline audit tables, SHAP top-5 persistence, the twelve-gate framework) exists to answer the one question an OCC examiner can ask at any time: &ldquo;Why this score?&rdquo;</p>
         </section>
 
-        <!-- TODO: Replace src values with actual screenshots -->
-        <!-- alert-list.png: alert list showing scored entities across urgency bands, BSA Analyst view -->
-        <!-- role-views.png: role-based interface comparison for BSA Analyst, BSA Officer, Auditor -->
         <div class="case-media wide">
-          <div class="media-pair">
-            <figure>
-              <img
-                src="../../assets/cori/alert-list.png"
-                alt="Alert list showing scored entities across urgency bands. BSA Analyst view with entity names, risk scores, top SHAP factor, and case status. Rows sorted by risk score descending."
-                width="900"
-                height="600"
-                loading="lazy"
-              >
-              <figcaption>Alert list. BSA Analyst view.</figcaption>
-            </figure>
-            <figure>
-              <img
-                src="../../assets/cori/role-views.png"
-                alt="Role-based interface views shown side by side: BSA Analyst case queue on the left, BSA Officer aggregate exposure summary in the center, and Auditor event log on the right."
-                width="900"
-                height="600"
-                loading="lazy"
-              >
-              <figcaption>Role-based views: BSA Analyst, BSA Officer, Auditor.</figcaption>
-            </figure>
-          </div>
+          <figure>
+            <img
+              src="../../assets/cori/pipeline-monitor.png"
+              alt="Pipeline monitor view showing ingest, transform, score, and graph build stages with audit status."
+              width="1200"
+              height="750"
+              loading="lazy"
+            >
+            <figcaption>Operations monitor: pipeline stages and audit state from ingest through graph build.</figcaption>
+          </figure>
         </div>
 
         <div class="case-article-footer">
